@@ -1,0 +1,8 @@
+#FROM gradle:7.0-jdk11 as builder
+#COPY . .
+#RUN gradle :order-backend:shadowJar
+
+FROM adoptopenjdk/openjdk11:jre
+#COPY --from
+COPY ./build/libs/order-backend-all.jar ./order-backend.jar
+ENTRYPOINT java -jar order-backend.jar

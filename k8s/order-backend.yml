@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-backend
+  labels:
+    app: order-backend
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: order-backend
+      labels:
+        app: order-backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "order-backend"
+        dapr.io/app-port: "8080"
+    spec:
+      containers:
+        - name: order-backend
+          image: vincentfree/order-backend:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: order-backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-backend
+spec:
+  selector:
+    app: order-backend
+  ports:
+    - port: 8080
+      protocol: TCP
+  type: ClusterIP

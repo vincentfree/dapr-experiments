@@ -1,0 +1,72 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'idea'
+    id 'application'
+    id 'io.vertx.vertx-plugin' version '1.2.0'
+}
+
+vertx {
+//    mainVerticle = 'com.github.vincentfree.verticle.HttpVerticle'
+    launcher = 'com.github.vincentfree.AppKt'
+    vertxVersion = '4.0.3'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main.kotlin.srcDirs += 'src/main/kotlin'
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+    }
+}
+
+compileKotlin {
+    kotlinOptions.suppressWarnings = true
+    kotlinOptions.jvmTarget = "11"
+}
+
+def vertxVersion = '4.0.3'
+def daprVersion = '1.0.2'
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    implementation "io.vertx:vertx-core:$vertxVersion"
+    implementation "io.vertx:vertx-web:$vertxVersion"
+    implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
+    implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.3"
+    implementation "com.google.guava:guava:30.1.1-android"
+    implementation "io.dapr:dapr-sdk:$daprVersion", {
+        exclude group: 'com.google.guava', module: 'guava'
+    }
+    implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-api-kotlin:1.0.0'
+    implementation group: 'com.lmax', name: 'disruptor', version: '3.4.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation "io.vertx:vertx-junit5:$vertxVersion"
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '7.0'
+}
+
+application {
+    mainClass = 'com.github.vincentfree.AppKt'
+}
