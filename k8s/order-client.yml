@@ -1,40 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: order-backend
+  name: order-client
   labels:
-    app: order-backend
+    app: order-client
 spec:
   replicas: 1
   template:
     metadata:
-      name: order-backend
+      name: order-client
       labels:
-        app: order-backend
+        app: order-client
       annotations:
         dapr.io/enabled: "true"
-        dapr.io/app-id: "order-backend"
+        dapr.io/app-id: "order-client"
         dapr.io/app-port: "8080"
         dapr.io/config: "tracing"
     spec:
       containers:
-        - name: order-backend
-          image: vincentfree/order-backend:v1.1
+        - name: order-client
+          image: vincentfree/order-client:v1.4
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
       restartPolicy: Always
   selector:
     matchLabels:
-      app: order-backend
+      app: order-client
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-backend
+  name: order-client
 spec:
   selector:
-    app: order-backend
+    app: order-client
   ports:
     - port: 8080
       protocol: TCP

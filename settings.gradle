@@ -8,4 +8,5 @@
  */
 
 rootProject.name = 'dapr-experiments'
-include('order-backend')
+include 'order-backend'
+include 'order-client'
