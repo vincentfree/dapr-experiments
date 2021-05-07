@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: order-client
-          image: vincentfree/order-client:v1.4
+          image: vincentfree/order-client:v1.6
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

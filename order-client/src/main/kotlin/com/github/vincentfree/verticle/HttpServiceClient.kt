@@ -11,7 +11,9 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.kotlin.ext.web.client.webClientOptionsOf
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.apache.logging.log4j.kotlin.Logging
@@ -43,9 +45,9 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
     }
 
     private fun continuousTraffic() {
-        vertx.setPeriodic(config.getLong("interval", 5000)) {
+        vertx.setPeriodic(config.getLong("interval", 1000)) {
             daprClient.invokeMethod(
-                config.getString("invocationService", "order-backend"),
+                invokeService,
                 "hello",
                 HttpExtension.GET,
                 mapOf()
@@ -89,23 +91,22 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
         get("/call/hello/:number").handler { ctx ->
             val times = ctx.pathParam("number").toIntOrNull() ?: 5
             logger.info { "Calling the hello service $times times" }
-            val flux = Flux.empty<Void>()
-            repeat(times) { time ->
-                flux.mergeWith(
+            launch(vertx.dispatcher()) {
+                Flux.range(0, times).flatMap {
                     daprClient.invokeMethod(
                         invokeService,
                         "hello",
                         HttpExtension.GET,
                         mapOf()
                     )
-                )
-                if(time == times) {
-                    flux.subscribe(
-                        { logger.debug { "invoked: $times" } },
-                        { logger.error(it) { "Failed to invoke! $times" } },
-                    )
                 }
+                    .asFlow().flowOn(vertx.dispatcher()).collect()
             }
+//                .subscribe(
+//                { logger.debug { "invoked: $times" } },
+//                { logger.error(it) { "Failed to invoke! $times" } },
+//            )
+
             ctx.response().apply {
                 statusCode = 204
                 end()
