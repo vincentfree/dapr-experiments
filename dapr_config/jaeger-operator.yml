@@ -7,7 +7,7 @@ spec:
   ingress:
     enabled: false
   allInOne:
-    image: jaegertracing/all-in-one:1.13
+    image: jaegertracing/all-in-one:1.21
     options:
       query:
         base-path: /jaeger

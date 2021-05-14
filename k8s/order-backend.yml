@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: order-backend
-          image: vincentfree/order-backend:v1.1
+          image: vincentfree/order-backend:v1.3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

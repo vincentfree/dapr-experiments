@@ -9,8 +9,8 @@ spec:
   metadata:
     - name: host
       value: 'my-release-mongodb.default.svc.cluster.local:27017' # Required. Example: "mongo-mongodb.default.svc.cluster.local:27017"
-#    - name: username
-#      value: <REPLACE-WITH-USERNAME> # Optional. Example: "admin"
+    - name: username
+      value: admin # Optional. Example: "admin"
     - name: password
       secretKeyRef:
         name: my-release-mongodb
