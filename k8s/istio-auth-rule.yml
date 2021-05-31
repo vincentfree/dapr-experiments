@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: order-service-authorization
+  namespace: traffic-generation-apps
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["traffic-generation-apps"]
+      to:
+        - operation:
+            methods: ["GET"]

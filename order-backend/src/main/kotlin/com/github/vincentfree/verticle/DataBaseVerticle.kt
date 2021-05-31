@@ -8,11 +8,11 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 class DataBaseVerticle : CoroutineVerticle() {
     private val mapEntry: (Order) -> Pair<String, Order> = { it.orderId to it }
     private val orders = hashMapOf(
-        mapEntry(Order(1, "toy", "01-John")),
-        mapEntry(Order(2, "toy", "01-Alex")),
-        mapEntry(Order(3, "book", "02-John")),
-        mapEntry(Order(4, "toy", "01-Karen")),
-        mapEntry(Order(5, "toy", "01-Phil")),
+        mapEntry(Order("1", "toy", "01-John")),
+        mapEntry(Order("2", "toy", "01-Alex")),
+        mapEntry(Order("3", "book", "02-John")),
+        mapEntry(Order("4", "toy", "01-Karen")),
+        mapEntry(Order("5", "toy", "01-Phil")),
     )
 
     private val bus by lazy { vertx.eventBus() }

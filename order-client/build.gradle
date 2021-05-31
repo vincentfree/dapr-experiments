@@ -43,6 +43,7 @@ dependencies {
     implementation "io.vertx:vertx-web-client:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
+    implementation "io.vertx:vertx-config:$vertxVersion"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.3"

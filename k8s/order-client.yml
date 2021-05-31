@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: order-client
   labels:
+    app.kubernetes.io/name: order-client
+    app.kubernetes.io/version: v1.10
     app: order-client
 spec:
   replicas: 1
@@ -11,18 +13,21 @@ spec:
       name: order-client
       labels:
         app: order-client
-      annotations:
-        dapr.io/enabled: "true"
-        dapr.io/app-id: "order-client"
-        dapr.io/app-port: "8080"
-        dapr.io/config: "tracing"
+#      annotations:
+#        dapr.io/enabled: "true"
+#        dapr.io/app-id: "order-client"
+#        dapr.io/app-port: "8080"
+#        dapr.io/config: "tracing"
     spec:
       containers:
         - name: order-client
-          image: vincentfree/order-client:v1.6
+          image: vincentfree/order-client:v1.10
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          env:
+            - name: DAPR_ACTIVE
+              value: "false"
       restartPolicy: Always
   selector:
     matchLabels:

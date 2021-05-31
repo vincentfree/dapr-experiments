@@ -34,11 +34,17 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
     private val server by lazy { vertx.createHttpServer() }
     private val router by lazy { Router.router(vertx) }
     private val daprClient = DaprClientBuilder().build()
+    private val daprActive by lazy { config.getString("DAPR_ACTIVE", "true").toBoolean() }
     private val invokeService by lazy { config.getString("invocationService", "order-backend") }
+    private val backend by lazy { config.getString("ORDER_BACKEND_SERVICE_HOST", "order-backend") }
+    private val backendPort by lazy { config.getInteger("ORDER_BACKEND_SERVICE_PORT", 8080) }
 
     override suspend fun start() {
         setupServer(initRouter())
-            .onSuccess { logger.info { "Server started..." } }
+            .onSuccess {
+                logger.info { "Server started..." }
+                logger.info { "Dapr active: $daprActive" }
+            }
             .await()
         continuousTraffic()
         super.start()
@@ -46,15 +52,21 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
 
     private fun continuousTraffic() {
         vertx.setPeriodic(config.getLong("interval", 1000)) {
-            daprClient.invokeMethod(
-                invokeService,
-                "hello",
-                HttpExtension.GET,
-                mapOf()
-            ).subscribe(
-                { logger.debug { "invoked" } },
-                { logger.error { "Failed to invoke! msg: ${it.message}" } },
-            )
+            if (daprActive) {
+                daprClient.invokeMethod(
+                    invokeService,
+                    "hello",
+                    HttpExtension.GET,
+                    mapOf()
+                ).subscribe(
+                    { logger.debug { "invoked" } },
+                    { logger.error { "Failed to invoke! msg: ${it.message}" } },
+                )
+            } else {
+                client.get(backendPort, backend, "/hello")
+                    .addQueryParam("failure","true")
+                    .send()
+            }
         }
     }
 
@@ -66,7 +78,7 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
 
     private fun initRouter(): Router {
         return router.apply {
-            concurrentHelloDapr()
+            if (daprActive) concurrentHelloDapr()
             concurrentHelloVertx()
         }
     }
@@ -77,7 +89,14 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
             logger.info { "Calling the hello service $times times" }
             repeat(times) {
                 launch(vertx.dispatcher()) {
-                    client.get("/v1.0/invoke/$invokeService/method/hello").send()
+                    if (daprActive) client
+                        .get("/v1.0/invoke/$invokeService/method/hello")
+                        .addQueryParam("failure","true")
+                        .send()
+                    else client
+                        .get(backendPort, backend, "/hello")
+                        .addQueryParam("failure","true")
+                        .send()
                 }
             }
             ctx.response().apply {

@@ -42,6 +42,7 @@ dependencies {
     implementation "io.vertx:vertx-web:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
+    implementation "io.vertx:vertx-config:$vertxVersion"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.3"
@@ -54,7 +55,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-api-kotlin:1.0.0'
     implementation group: 'com.lmax', name: 'disruptor', version: '3.4.3'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
     testImplementation "io.vertx:vertx-junit5:$vertxVersion"
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
