@@ -12,7 +12,6 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.TimeoutHandler
 import io.vertx.kotlin.core.http.httpServerOptionsOf
-import io.vertx.kotlin.core.json.jsonObjectOf
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -41,6 +40,7 @@ class HttpService : CoroutineVerticle(), Logging {
     private val bus by lazy { vertx.eventBus() }
     private val daprClient = DaprClientBuilder().build()
     private val daprActive by lazy { config.getString("DAPR_ACTIVE", "true").toBoolean() }
+    private var errorProbability = 100
 
     override suspend fun start() {
         logger.info { "Starting..." }
@@ -78,13 +78,13 @@ class HttpService : CoroutineVerticle(), Logging {
                 .handler(TimeoutHandler.create(5000))
                 .handler {
                     if (Random.nextInt(0, 500) == 15) logger.info { "Hey how are you? long time no see" }
-                    if (it.queryParam("failure").isNullOrEmpty()) {
-                        if (Random.nextInt(0, 100) == 5) it.response().apply {
+                    if (it.queryParam("failure").isNotEmpty()) {
+                        if (Random.nextInt(0, errorProbability) == 0) it.response().apply {
                             statusCode = 500
                             end()
                         }
                         else {
-                            it.response().end("Hello world!")
+                            it.response().end("Hello, ${it.request().host()}!")
                         }
                     } else {
                         it.response().end("Hello world!")
@@ -93,6 +93,23 @@ class HttpService : CoroutineVerticle(), Logging {
             put("/orders/:key/:name")
                 .handler(TimeoutHandler.create(5000))
                 .handler(::createOrder)
+            put("/error/scale/:value")
+                .handler(TimeoutHandler.create(5000))
+                .handler(::updateScale)
+        }
+    }
+
+    private fun updateScale(ctx: RoutingContext) {
+        ctx.pathParam("value")?.let { scale ->
+            when (val s = scale.toIntOrNull()) {
+                is Int -> {
+                    errorProbability = s
+                    val msg = "Updated error probability to 1 in $errorProbability"
+                    logger.info { msg }
+                    ctx.end(msg)
+                }
+                else -> ctx.end("Could not convert to integer value, original value: $scale")
+            }
         }
     }
 

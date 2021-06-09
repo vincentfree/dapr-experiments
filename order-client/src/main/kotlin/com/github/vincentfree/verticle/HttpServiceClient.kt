@@ -3,10 +3,13 @@ package com.github.vincentfree.verticle
 import io.dapr.client.DaprClientBuilder
 import io.dapr.client.domain.HttpExtension
 import io.vertx.core.Future
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpServer
 import io.vertx.ext.web.Router
+import io.vertx.ext.web.client.HttpRequest
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
+import io.vertx.ext.web.codec.BodyCodec
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
@@ -20,6 +23,7 @@ import org.apache.logging.log4j.kotlin.Logging
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import kotlin.random.Random
 
 class HttpServiceClient : CoroutineVerticle(), Logging {
     private val options = webClientOptionsOf(
@@ -38,6 +42,7 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
     private val invokeService by lazy { config.getString("invocationService", "order-backend") }
     private val backend by lazy { config.getString("ORDER_BACKEND_SERVICE_HOST", "order-backend") }
     private val backendPort by lazy { config.getInteger("ORDER_BACKEND_SERVICE_PORT", 8080) }
+    private var addFailure = true
 
     override suspend fun start() {
         setupServer(initRouter())
@@ -64,11 +69,15 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
                 )
             } else {
                 client.get(backendPort, backend, "/hello")
-                    .addQueryParam("failure","true")
+                    .handleFailure()
                     .send()
             }
         }
     }
+
+    private fun HttpRequest<Buffer>.handleFailure() = if (addFailure) {
+        addQueryParam("failure", "true")
+    } else this
 
     private fun setupServer(router: Router): Future<HttpServer> {
         return server
@@ -80,6 +89,20 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
         return router.apply {
             if (daprActive) concurrentHelloDapr()
             concurrentHelloVertx()
+            toggleFailure()
+        }
+    }
+
+    private fun Router.toggleFailure() {
+        get("/failure/:switch").handler { ctx ->
+            ctx.pathParam("switch")?.let { switch ->
+                kotlin.runCatching { switch.toBoolean() }
+                    .onSuccess {
+                        addFailure = it
+                        ctx.response().end("Successfully set failure option to: $addFailure")
+                    }
+                    .onFailure { ctx.end("Unable to parse content to boolean") }
+            } ?: ctx.end("Nothing changed")
         }
     }
 
@@ -91,12 +114,20 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
                 launch(vertx.dispatcher()) {
                     if (daprActive) client
                         .get("/v1.0/invoke/$invokeService/method/hello")
-                        .addQueryParam("failure","true")
                         .send()
                     else client
                         .get(backendPort, backend, "/hello")
-                        .addQueryParam("failure","true")
+                        .handleFailure()
+                        .`as`(BodyCodec.string())
                         .send()
+                        .onFailure { logger.error { "The request was not successful.." } }
+                        .onSuccess {
+                            if (Random.nextInt(0, 50) == 1 && it.statusCode() <=399) {
+                                logger.info { "Message: ${it.body()}" }
+                            } else {
+                                logger.error { "The request was not successful.. status code: ${it.statusCode()}" }
+                            }
+                        }
                 }
             }
             ctx.response().apply {
@@ -121,11 +152,6 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
                 }
                     .asFlow().flowOn(vertx.dispatcher()).collect()
             }
-//                .subscribe(
-//                { logger.debug { "invoked: $times" } },
-//                { logger.error(it) { "Failed to invoke! $times" } },
-//            )
-
             ctx.response().apply {
                 statusCode = 204
                 end()
