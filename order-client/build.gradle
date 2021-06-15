@@ -31,8 +31,8 @@ compileKotlin {
     kotlinOptions.jvmTarget = "11"
 }
 
-def vertxVersion = '4.0.3'
-def daprVersion = '1.0.2'
+def vertxVersion = '4.1.0'
+def daprVersion = '1.1.0'
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
@@ -53,6 +53,7 @@ dependencies {
     }
     implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-kubernetes:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-api-kotlin:1.0.0'
     implementation group: 'com.lmax', name: 'disruptor', version: '3.4.3'
 
@@ -71,4 +72,8 @@ task wrapper(type: Wrapper) {
 
 application {
     mainClass = 'com.github.vincentfree.AppKt'
+}
+
+shadowJar {
+  transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer)
 }
