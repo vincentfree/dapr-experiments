@@ -6,7 +6,7 @@
  * Detailed information about configuring a multi-project build in Gradle can be found
  * in the user manual at https://docs.gradle.org/6.8.3/userguide/multi_project_builds.html
  */
-
 rootProject.name = 'dapr-experiments'
-include 'order-backend'
-include 'order-client'
+include 'domain-objects', 'order-backend', 'order-client'
+include 'basic-app'
+

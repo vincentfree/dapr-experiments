@@ -1,5 +1,4 @@
 plugins {
-    id 'java'
     id 'org.jetbrains.kotlin.jvm'
     id 'idea'
     id 'application'
@@ -9,7 +8,7 @@ plugins {
 vertx {
 //    mainVerticle = 'com.github.vincentfree.verticle.HttpVerticle'
     launcher = 'com.github.vincentfree.AppKt'
-    vertxVersion = '4.0.3'
+    vertxVersion = '4.1.1'
 }
 
 repositories {
@@ -31,12 +30,14 @@ compileKotlin {
     kotlinOptions.jvmTarget = "11"
 }
 
-def vertxVersion = '4.1.0'
+def vertxVersion = '4.1.1'
 def daprVersion = '1.1.0'
 
 dependencies {
+    implementation project(':domain-objects')
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
 
     implementation "io.vertx:vertx-core:$vertxVersion"
     implementation "io.vertx:vertx-web:$vertxVersion"
@@ -66,7 +67,7 @@ test {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '7.0'
+    gradleVersion = '7.1.1'
 }
 
 application {

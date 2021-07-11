@@ -4,7 +4,7 @@ metadata:
   name: order-client
   labels:
     app: order-client
-    version: v1.16
+    version: v1.17
 spec:
   replicas: 1
   template:
@@ -13,22 +13,23 @@ spec:
       labels:
         app: order-client
         app.kubernetes.io/name: order-client
-        app.kubernetes.io/version: v1.16
-#      annotations:
-#        dapr.io/enabled: "true"
-#        dapr.io/app-id: "order-client"
-#        dapr.io/app-port: "8080"
+        app.kubernetes.io/version: v1.17
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "order-client"
+        dapr.io/app-port: "8080"
+        prometheus.io/scrape: "true"
 #        dapr.io/config: "tracing"
     spec:
       containers:
         - name: order-client
-          image: vincentfree/order-client:v1.16
+          image: vincentfree/order-client:v1.17
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
             - name: DAPR_ACTIVE
-              value: "false"
+              value: "true"
           resources:
             requests:
               memory: 300Mi
@@ -47,7 +48,7 @@ metadata:
   name: order-client
   labels:
     app.kubernetes.io/name: order-client
-    app.kubernetes.io/version: v1.16
+    app.kubernetes.io/version: v1.17
 spec:
   selector:
     app: order-client

@@ -8,12 +8,12 @@ spec:
   version: v1
   metadata:
     - name: host
-      value: 'my-release-mongodb.default.svc.cluster.local:27017' # Required. Example: "mongo-mongodb.default.svc.cluster.local:27017"
+      value: 'dapr-mongodb.traffic-generation-apps.svc.cluster.local:27017' # Required. Example: "mongo-mongodb.default.svc.cluster.local:27017"
     - name: username
       value: admin # Optional. Example: "admin"
     - name: password
       secretKeyRef:
-        name: my-release-mongodb
+        name: dapr-mongodb
         key: mongodb-root-password
 #    - name: databaseName
 #      value: <REPLACE-WITH-DATABASE-NAME> # Optional. default: "daprStore"

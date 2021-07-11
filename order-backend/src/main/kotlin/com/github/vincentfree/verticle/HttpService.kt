@@ -1,10 +1,12 @@
 package com.github.vincentfree.verticle
 
+import com.github.vincentfree.model.Addresses
 import com.github.vincentfree.model.Addresses.GET_ORDER
 import com.github.vincentfree.model.Addresses.SEND_ORDER
 import com.github.vincentfree.model.Order
 import com.github.vincentfree.model.ResponseHeaders
 import io.dapr.client.DaprClientBuilder
+import io.vertx.core.eventbus.MessageProducer
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
@@ -15,13 +17,11 @@ import io.vertx.kotlin.core.http.httpServerOptionsOf
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import org.apache.logging.log4j.kotlin.Logging
+import reactor.core.publisher.Mono
 import java.util.*
 import kotlin.random.Random
 
@@ -50,9 +50,7 @@ class HttpService : CoroutineVerticle(), Logging {
         logger.info { "server started on port: ${server.actualPort()}" }
         if (daprActive) {
             kotlin.runCatching {
-                daprClient.waitForSidecar(1000).asFlow()
-                    .flowOn(vertx.dispatcher())
-                    .first()
+                daprClient.waitForSidecar(1000).asVertxFlow().first()
             }.onFailure {
                 logger.error { "Failed to connect to dapr, starting without verification " }
                 logger.info { "Application started" }
@@ -137,19 +135,23 @@ class HttpService : CoroutineVerticle(), Logging {
     private fun getOrderDapr(ctx: RoutingContext) {
         ctx.pathParam("key")?.let { key ->
             logger.debug { "Getting data for key: $key" }
-            val mono = daprClient.getState(stateStore, key, String::class.java)
-            launch(vertx.dispatcher()) {
-                mono.asFlow()
-                    .catch {
-                        logger.error { "Something failed while getting data from the state store. msg: ${it.message}" }
+            bus.request<JsonObject>(GET_ORDER, key).onSuccess { msg ->
+                val json = msg.body()
+                when (msg.headers()["status"]) {
+                    "success" -> ctx.response().apply {
+                        putHeader(HttpHeaders.CONTENT_TYPE, ResponseHeaders.json)
+                        end(json.encode())
                     }
-                    .collect { state ->
-                        ctx.response().apply {
-                            putHeader(HttpHeaders.CONTENT_TYPE, ResponseHeaders.json)
-                            end(state.value)
-                        }
+                    "empty" -> ctx.response().apply {
+                        statusCode = 204
+                        end()
                     }
-            }
+                    else -> ctx.response().apply {
+                        statusCode = 500
+                        end()
+                    }
+                }
+            }.onFailure(ctx::fail)
         } ?: ctx.response().badRequest("The key path param could not be resolved")
     }
 
@@ -162,13 +164,16 @@ class HttpService : CoroutineVerticle(), Logging {
                 name = name,
                 orderId = UUID.randomUUID().toString()
             )
+            val orderSender: MessageProducer<JsonObject> = bus.sender(SEND_ORDER)
+            orderSender.write(payload.toJson())
+                .onFailure(ctx::fail)
+                .onSuccess {
+                    ctx.response().apply {
+                        statusCode = 204
+                        end()
+                    }
+                }
 
-            if (daprActive) daprClient.saveState(stateStore, key, payload.toJson())
-            else bus.send(SEND_ORDER, payload.toJson())
-            ctx.response().apply {
-                statusCode = 204
-                end()
-            }
         } else {
             ctx.response().badRequest("The key could not be extracted form the path. use PUT /orders/:key/")
         }
@@ -178,4 +183,7 @@ class HttpService : CoroutineVerticle(), Logging {
         statusCode = 400
         end(msg)
     }
+
+    private fun <T> Mono<out T>.asVertxFlow(): Flow<T> = this.asFlow()
+        .flowOn(vertx.dispatcher())
 }

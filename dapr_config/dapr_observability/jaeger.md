@@ -26,7 +26,6 @@ docker run -d --name jaeger \
   jaegertracing/all-in-one:1.21
 ```
 
-
 Next, create the following YAML files locally:
 
 * **config.yaml**: Note that because we are using the Zipkin protocol

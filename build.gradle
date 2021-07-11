@@ -1,7 +1,12 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.20'
 }
+
+def vertxVersion = '4.1.1'
+
+sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -16,3 +21,7 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+//task wrapper(type: Wrapper) {
+//    gradleVersion = '7.1.1'
+//}

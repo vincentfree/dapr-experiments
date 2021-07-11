@@ -4,7 +4,7 @@
         <Console name="Console" target="SYSTEM_OUT">
             <!-- <PatternLayout disableAnsi="false" pattern="%d{HH:mm:ss.SSS} [%t] %highlight{%-5level{lowerCase=true}} %highlight{%logger{24}}{INFO=blue} - %msg%n"/> -->
             <JsonLayout>
-                <KeyValuePair key="Hostname" value="${env:HOSTNAME}"/>
+                <KeyValuePair key="hostname" value="${env:HOSTNAME}"/>
 <!--                <KeyValuePair key="kubernetes.namespaceName" value="${k8s:namespaceName}"/>-->
 <!--                <KeyValuePair key="kubernetes.podName" value="${k8s:podName}"/>-->
             </JsonLayout>

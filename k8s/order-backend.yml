@@ -4,7 +4,7 @@ metadata:
   name: order-backend
   labels:
     app: order-backend
-    version: v1.17
+    version: v1.18
 spec:
   replicas: 1
   template:
@@ -13,23 +13,23 @@ spec:
       labels:
         app: order-backend
         app.kubernetes.io/name: order-backend
-        app.kubernetes.io/version: v1.17
-        version: v1.17
-#      annotations:
-#        dapr.io/enabled: "true"
-#        dapr.io/app-id: "order-backend"
-#        dapr.io/app-port: "8080"
+        app.kubernetes.io/version: v1.18
+        version: v1.18
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "order-backend"
+        dapr.io/app-port: "8080"
 #        dapr.io/config: "tracing"
     spec:
       containers:
         - name: order-backend
-          image: vincentfree/order-backend:v1.17
+          image: vincentfree/order-backend:v1.18
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
             - name: DAPR_ACTIVE
-              value: "false"
+              value: "true"
           resources:
             requests:
               memory: 300Mi
@@ -48,7 +48,7 @@ metadata:
   name: order-backend
   labels:
     app.kubernetes.io/name: order-backend
-    app.kubernetes.io/version: v1.17
+    app.kubernetes.io/version: v1.18
 spec:
   selector:
     app: order-backend

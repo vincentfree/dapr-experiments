@@ -1,12 +1,28 @@
 package com.github.vincentfree.verticle
 
+import com.github.vincentfree.model.Addresses
 import com.github.vincentfree.model.Order
+import io.dapr.client.DaprClientBuilder
+import io.vertx.core.eventbus.DeliveryOptions
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
+import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
+import io.vertx.kotlin.core.json.json
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.kotlin.coroutines.receiveChannelHandler
+import io.vertx.kotlin.coroutines.toChannel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.awaitFirst
+import org.apache.logging.log4j.kotlin.Logging
 
-class DataBaseVerticle : CoroutineVerticle() {
+class DataBaseVerticle : CoroutineVerticle(), Logging {
+    private val mongoState = "mongo-state-store"
+    private val daprClient = DaprClientBuilder().build()
+    private val daprActive by lazy { config.getString("DAPR_ACTIVE", "true").toBoolean() }
     private val mapEntry: (Order) -> Pair<String, Order> = { it.orderId to it }
+    private val toEntry: Order.() -> Pair<String, Order> = { orderId to this }
     private val orders = hashMapOf(
         mapEntry(Order("1", "toy", "01-John")),
         mapEntry(Order("2", "toy", "01-Alex")),
@@ -19,25 +35,59 @@ class DataBaseVerticle : CoroutineVerticle() {
 
     override suspend fun start() {
         orders()
-        addOrder()
+        sendOrder()
+        getOrder()
         super.start()
     }
 
     private fun orders() {
         bus.consumer<String>("orders").handler { msg ->
-            val array = orders.values
-                .map(Order::toJson)
-                .fold(JsonArray()) { array, json -> array.add(json) }
-            msg.reply(array)
+            val result = if (daprActive) {
+
+                daprClient.getState(
+                    mongoState,
+                    "key1",
+                    Order::class.java
+                )
+                TODO("Implement dapr result")
+            } else {
+                orders.values
+                    .map(Order::toJson)
+                    .fold(JsonArray()) { array, json -> array.add(json) }
+            }
+            msg.reply(result)
         }
     }
 
-    private fun addOrder() {
-        bus.consumer<JsonObject>("add.order").handler { msg ->
+    private fun sendOrder() {
+        bus.consumer<JsonObject>(Addresses.SEND_ORDER).handler { msg ->
             val json = msg.body()
-            val order = kotlin.runCatching { json.mapTo(Order::class.java) }
-                .map { mapEntry(it) }
-                .onSuccess { (k, v) -> orders[k] = v }
+            kotlin.runCatching { json.mapTo(Order::class.java) }
+                .onSuccess { order ->
+                    if (daprActive) daprClient.saveState(mongoState, order.orderId, order)
+                    else orders += order.toEntry()
+                }
+                .onFailure {
+                    logger.info { "Failed to persist order, unable to map to Order class, msg: ${it.message}" }
+                }
         }
+    }
+
+    private suspend fun getOrder() {
+        val channel = bus.consumer<String>(Addresses.GET_ORDER).toChannel(vertx)
+        for (msg in channel) {
+            val key = msg.body()
+            val order = if (daprActive) {
+                daprClient.getState(mongoState, key, Order::class.java)
+                    .awaitFirst().value
+            } else orders[key]
+            order?.let {
+                msg.reply(it.toJson(), DeliveryOptions().addHeader("status", "success"))
+            } ?: msg.reply(
+                JsonObject(),
+                DeliveryOptions().addHeader("status", "empty")
+            )
+        }
+
     }
 }
