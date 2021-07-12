@@ -6,12 +6,14 @@ import com.github.vincentfree.model.Addresses.SEND_ORDER
 import com.github.vincentfree.model.Order
 import com.github.vincentfree.model.ResponseHeaders
 import io.dapr.client.DaprClientBuilder
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.MessageProducer
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
+import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.TimeoutHandler
 import io.vertx.kotlin.core.http.httpServerOptionsOf
 import io.vertx.kotlin.coroutines.CoroutineVerticle
@@ -69,9 +71,13 @@ class HttpService : CoroutineVerticle(), Logging {
 
     private fun Router.configureRouter(): Router {
         return apply {
+            route().handler(BodyHandler.create())
             get("/orders/:key").produces(ResponseHeaders.json)
                 .handler(TimeoutHandler.create(5000))
                 .handler(::getOrder)
+            post("/orders/events")
+                .handler(TimeoutHandler.create(5000))
+                .handler(::eventStream)
             get("/hello")
                 .handler(TimeoutHandler.create(5000))
                 .handler {
@@ -114,6 +120,14 @@ class HttpService : CoroutineVerticle(), Logging {
     private fun getOrder(ctx: RoutingContext) {
         if (daprActive) getOrderDapr(ctx)
         else getOrderVertx(ctx)
+    }
+
+    private fun eventStream(ctx: RoutingContext) {
+        val json = ctx.request().body().map(Buffer::toJsonObject)
+        json.onSuccess { bus.publish(SEND_ORDER, it) }
+            .onFailure { logger.error(it) { "Unable to parse to JsonObject" } }
+        ctx.response().end()
+
     }
 
     private fun getOrderVertx(ctx: RoutingContext) {

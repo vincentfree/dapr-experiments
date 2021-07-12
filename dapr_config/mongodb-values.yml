@@ -8,7 +8,7 @@
 #     - myRegistryKeySecretName
 #   storageClass: myStorageClass
 ## Override the namespace for resource deployed by the chart, but can itself be overridden by the local namespaceOverride
-namespaceOverride: traffic-generation-apps
+namespaceOverride: dapr
 
 image:
   ## Bitnami MongoDB(R) registry

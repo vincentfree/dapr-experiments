@@ -2,15 +2,15 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: mongo-state-store
-  namespace: default
+  namespace: dapr
 spec:
   type: state.mongodb
   version: v1
   metadata:
     - name: host
-      value: 'dapr-mongodb.traffic-generation-apps.svc.cluster.local:27017' # Required. Example: "mongo-mongodb.default.svc.cluster.local:27017"
-    - name: username
-      value: admin # Optional. Example: "admin"
+      value: 'dapr-mongodb.dapr.svc.cluster.local:27017' # Required. Example: "mongo-mongodb.default.svc.cluster.local:27017"
+#    - name: username
+#      value: admin # Optional. Example: "admin"
     - name: password
       secretKeyRef:
         name: dapr-mongodb

@@ -1,0 +1,10 @@
+apiVersion: dapr.io/v1alpha1
+kind: Subscription
+metadata:
+  name: order-subscription
+spec:
+  topic: order.events
+  route: /orders/events
+  pubsubname: pubsub
+scopes:
+  - order-backend

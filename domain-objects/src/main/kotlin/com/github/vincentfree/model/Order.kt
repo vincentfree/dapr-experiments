@@ -9,5 +9,6 @@ data class Order(val id: String, val name: String, val orderId: String) {
         "name" to name,
         "orderId" to orderId,
     )
+    fun toJsonString(): String = toJson().encode()
 }
 

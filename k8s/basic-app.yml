@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: order-backend
+  name: basic-app
   labels:
-    app: order-backend
-    version: v1.22
+    app: basic-app
+    version: v1.5
 spec:
   replicas: 1
   template:
     metadata:
-      name: order-backend
+      name: basic-app
       labels:
-        app: order-backend
-        app.kubernetes.io/name: order-backend
-        app.kubernetes.io/version: v1.22
-        version: v1.22
+        app: basic-app
+        app.kubernetes.io/name: basic-app
+        app.kubernetes.io/version: v1.5
+        version: v1.5
       annotations:
         dapr.io/enabled: "true"
-        dapr.io/app-id: "order-backend"
-        dapr.io/app-port: "8080"
+        dapr.io/app-id: "basic-app"
+        # dapr.io/app-port: "8080"
 #        dapr.io/config: "tracing"
     spec:
       containers:
-        - name: order-backend
-          image: vincentfree/order-backend:v1.22
+        - name: basic-app
+          image: vincentfree/basic-app:v1.5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -40,18 +40,18 @@ spec:
       restartPolicy: Always
   selector:
     matchLabels:
-      app: order-backend
+      app: basic-app
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-backend
+  name: basic-app
   labels:
-    app.kubernetes.io/name: order-backend
-    app.kubernetes.io/version: v1.22
+    app.kubernetes.io/name: basic-app
+    app.kubernetes.io/version: v1.5
 spec:
   selector:
-    app: order-backend
+    app: basic-app
   ports:
     - port: 8080
       protocol: TCP

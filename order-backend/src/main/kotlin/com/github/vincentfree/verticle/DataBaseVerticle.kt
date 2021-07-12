@@ -4,16 +4,10 @@ import com.github.vincentfree.model.Addresses
 import com.github.vincentfree.model.Order
 import io.dapr.client.DaprClientBuilder
 import io.vertx.core.eventbus.DeliveryOptions
-import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.kotlin.core.eventbus.deliveryOptionsOf
-import io.vertx.kotlin.core.json.json
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.coroutines.receiveChannelHandler
 import io.vertx.kotlin.coroutines.toChannel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.awaitFirst
 import org.apache.logging.log4j.kotlin.Logging
 
@@ -64,8 +58,11 @@ class DataBaseVerticle : CoroutineVerticle(), Logging {
             val json = msg.body()
             kotlin.runCatching { json.mapTo(Order::class.java) }
                 .onSuccess { order ->
-                    if (daprActive) daprClient.saveState(mongoState, order.orderId, order)
-                    else orders += order.toEntry()
+                    if (daprActive) {
+                        //TODO delete log line
+                        logger.info { "Saving to state store with the current json: ${json.encodePrettily()}" }
+                        daprClient.saveState(mongoState, order.orderId, order)
+                    } else orders += order.toEntry()
                 }
                 .onFailure {
                     logger.info { "Failed to persist order, unable to map to Order class, msg: ${it.message}" }
