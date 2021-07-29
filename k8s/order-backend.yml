@@ -4,7 +4,7 @@ metadata:
   name: order-backend
   labels:
     app: order-backend
-    version: v1.26
+    version: v1.29
 spec:
   replicas: 1
   template:
@@ -13,8 +13,8 @@ spec:
       labels:
         app: order-backend
         app.kubernetes.io/name: order-backend
-        app.kubernetes.io/version: v1.26
-        version: v1.26
+        app.kubernetes.io/version: v1.29
+        version: v1.29
       annotations:
         dapr.io/enabled: "true"
         dapr.io/app-id: "order-backend"
@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: order-backend
-          image: vincentfree/order-backend:v1.26
+          image: vincentfree/order-backend:v1.29
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -38,7 +38,12 @@ spec:
             httpGet:
               port: 8080
               path: /hello
-            initialDelaySeconds: 5
+            initialDelaySeconds: 20
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /hello
+            initialDelaySeconds: 20
 
           resources:
             requests:
@@ -58,7 +63,7 @@ metadata:
   name: order-backend
   labels:
     app.kubernetes.io/name: order-backend
-    app.kubernetes.io/version: v1.26
+    app.kubernetes.io/version: v1.29
 spec:
   selector:
     app: order-backend

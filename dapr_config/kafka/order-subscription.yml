@@ -4,7 +4,7 @@ metadata:
   name: order-subscription
 spec:
   topic: order.events
-  route: /orders/events
+  route: /orderevents
   pubsubname: pubsub
-scopes:
-  - order-backend
+#scopes:
+#  - order-backend

@@ -5,9 +5,6 @@ plugins {
     id 'io.vertx.vertx-plugin' version '1.2.0'
 }
 
-sourceCompatibility = 11
-targetCompatibility = 11
-
 vertx {
 //    mainVerticle = 'com.github.vincentfree.verticle.HttpVerticle'
     launcher = 'com.github.vincentfree.AppKt'
@@ -47,6 +44,10 @@ dependencies {
     implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
     implementation "io.vertx:vertx-config:$vertxVersion"
+
+    // CloudEvents
+    implementation 'io.cloudevents:cloudevents-http-vertx:2.2.0'
+    implementation 'io.cloudevents:cloudevents-json-jackson:2.2.0'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1'
