@@ -6,10 +6,13 @@ import com.github.vincentfree.model.Addresses.SEND_ORDER
 import com.github.vincentfree.model.Order
 import com.github.vincentfree.model.ResponseHeaders
 import io.dapr.client.DaprClientBuilder
+import io.vertx.core.Future
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.eventbus.Message
 import io.vertx.core.eventbus.MessageProducer
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpServerResponse
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
@@ -19,9 +22,11 @@ import io.vertx.kotlin.core.http.httpServerOptionsOf
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitFirst
 import org.apache.logging.log4j.kotlin.Logging
 import reactor.core.publisher.Mono
 import java.util.*
@@ -52,7 +57,7 @@ class HttpService : CoroutineVerticle(), Logging {
         logger.info { "server started on port: ${server.actualPort()}" }
         if (daprActive) {
             kotlin.runCatching {
-                daprClient.waitForSidecar(1000).asVertxFlow().first()
+                daprClient.waitForSidecar(5000).asVertxFlow().first()
             }.onFailure {
                 logger.error { "Failed to connect to dapr, starting without verification " }
                 logger.info { "Application started" }
@@ -75,6 +80,9 @@ class HttpService : CoroutineVerticle(), Logging {
             get("/orders/:key").produces(ResponseHeaders.json)
                 .handler(TimeoutHandler.create(5000))
                 .handler(::getOrder)
+            get("/orders").produces(ResponseHeaders.json)
+                .handler(TimeoutHandler.create(5000))
+                .handler(::orders)
             post("/orders/events")
                 .handler(TimeoutHandler.create(5000))
                 .handler(::eventStream)
@@ -100,6 +108,9 @@ class HttpService : CoroutineVerticle(), Logging {
             put("/error/scale/:value")
                 .handler(TimeoutHandler.create(5000))
                 .handler(::updateScale)
+            get("/readiness")
+                .handler(TimeoutHandler.create(5000))
+                .handler(::readiness)
         }
     }
 
@@ -120,6 +131,16 @@ class HttpService : CoroutineVerticle(), Logging {
     private fun getOrder(ctx: RoutingContext) {
         if (daprActive) getOrderDapr(ctx)
         else getOrderVertx(ctx)
+    }
+
+    private fun orders(ctx: RoutingContext) {
+        val reply: Future<JsonArray> = bus.request<JsonArray>(Addresses.ORDERS, "")
+            .map(Message<JsonArray>::body)
+        reply
+            .onSuccess { array ->
+                ctx.response().end(array.encode())
+            }
+            .onFailure(ctx::fail)
     }
 
     private fun eventStream(ctx: RoutingContext) {
@@ -178,19 +199,23 @@ class HttpService : CoroutineVerticle(), Logging {
                 name = name,
                 orderId = UUID.randomUUID().toString()
             )
-            val orderSender: MessageProducer<JsonObject> = bus.sender(SEND_ORDER)
-            orderSender.write(payload.toJson())
-                .onFailure(ctx::fail)
-                .onSuccess {
-                    ctx.response().apply {
-                        statusCode = 204
-                        end()
-                    }
-                }
-
+            bus.send(SEND_ORDER, payload.toJson())
+            ctx.response().apply {
+                statusCode = 204
+                end()
+            }
         } else {
             ctx.response().badRequest("The key could not be extracted form the path. use PUT /orders/:key/")
         }
+    }
+
+    private fun readiness(ctx: RoutingContext) {
+        if (daprActive) {
+            daprClient.waitForSidecar(1500).subscribe(
+                { ctx.end() },
+                { ctx.fail(it) }
+            )
+        } else ctx.end()
     }
 
     private fun HttpServerResponse.badRequest(msg: String) {

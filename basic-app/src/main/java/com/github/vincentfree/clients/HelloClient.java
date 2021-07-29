@@ -15,24 +15,27 @@ public class HelloClient {
         this.client = client;
     }
 
-    public HttpRequest helloRequest() {
-        return HttpRequest.newBuilder().GET().version(HttpClient.Version.HTTP_1_1)
+    private HttpRequest helloRequest() {
+        return HttpRequest.newBuilder()
+                .GET()
+                .version(HttpClient.Version.HTTP_1_1)
                 .uri(URI.create("http://localhost:3500/v1.0/invoke/order-backend/method/hello?failure=true"))
                 .timeout(Duration.ofSeconds(5)).build();
     }
 
 
-    public HttpResponse<String> callHello(HttpRequest request, HttpResponse.BodyHandler<String> handler)
-            throws IOException, InterruptedException {
+    private HttpResponse<String> callHello() throws IOException, InterruptedException {
+        var request = helloRequest();
+        var handler = HttpResponse.BodyHandlers.ofString();
         return client.send(request, handler);
     }
 
-    public TimerTask helloTimerTask(HttpRequest request, HttpResponse.BodyHandler<String> handler) {
+    public TimerTask helloTimerTask() {
         return new TimerTask() {
             public void run() {
                 try {
                     System.out.println("calling order-backend");
-                    var result = callHello(request, handler);
+                    var result = callHello();
                     System.out.printf("The status is: %d and the result is : %s%n", result.statusCode(), result.body());
                 } catch (IOException | InterruptedException err) {
                     System.out.println("Failed to call order-backend!");

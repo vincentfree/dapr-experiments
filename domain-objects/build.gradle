@@ -18,13 +18,13 @@ compileKotlin {
     kotlinOptions.jvmTarget = "11"
 }
 
-def vertxVersion = '4.1.1'
+def vertxVersion = '4.1.2'
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 
     implementation "io.vertx:vertx-core:$vertxVersion"
     implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"

@@ -1,10 +1,11 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
- namespace: kafka
+ namespace: dapr
  name: order.events 
  labels:
-   strimzi.io/cluster: "dapr-kafka"
+   strimzi.io/cluster: "my-kafka"
+#   strimzi.io/cluster: "dapr-kafka"
 spec:
  partitions: 2
  replicas: 1

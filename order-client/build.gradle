@@ -8,8 +8,11 @@ plugins {
 vertx {
 //    mainVerticle = 'com.github.vincentfree.verticle.HttpVerticle'
     launcher = 'com.github.vincentfree.AppKt'
-    vertxVersion = '4.1.0'
+    vertxVersion = '4.1.2'
 }
+
+def vertxVersion = '4.1.2'
+def daprVersion = '1.1.0'
 
 repositories {
     mavenCentral()
@@ -30,15 +33,12 @@ compileKotlin {
     kotlinOptions.jvmTarget = "11"
 }
 
-def vertxVersion = '4.1.0'
-def daprVersion = '1.1.0'
-
 dependencies {
     implementation project(':domain-objects')
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
 
     implementation "io.vertx:vertx-core:$vertxVersion"
     implementation "io.vertx:vertx-web:$vertxVersion"
@@ -47,9 +47,9 @@ dependencies {
     implementation "io.vertx:vertx-lang-kotlin-coroutines:$vertxVersion"
     implementation "io.vertx:vertx-config:$vertxVersion"
 
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0"
-    implementation "com.google.guava:guava:30.1.1-android"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1'
+    implementation 'com.google.guava:guava:30.1.1-jre'
     implementation "io.dapr:dapr-sdk:$daprVersion", {
         exclude group: 'com.google.guava', module: 'guava'
     }
@@ -57,11 +57,11 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-kubernetes:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-api-kotlin:1.0.0'
-    implementation group: 'com.lmax', name: 'disruptor', version: '3.4.3'
+    implementation group: 'com.lmax', name: 'disruptor', version: '3.4.4'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testImplementation "io.vertx:vertx-junit5:$vertxVersion"
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 
 }
 

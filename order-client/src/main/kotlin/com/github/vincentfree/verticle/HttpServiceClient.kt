@@ -8,21 +8,19 @@ import io.vertx.core.http.HttpServer
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.client.HttpRequest
 import io.vertx.ext.web.client.WebClient
-import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.ext.web.codec.BodyCodec
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.kotlin.ext.web.client.webClientOptionsOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitFirst
 import org.apache.logging.log4j.kotlin.Logging
-import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import kotlin.random.Random
 
 class HttpServiceClient : CoroutineVerticle(), Logging {
@@ -34,6 +32,8 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
         keepAliveTimeout = 2500,
         maxPoolSize = 1000,
     )
+
+    // values
     private val client by lazy { WebClient.create(vertx, options) }
     private val server by lazy { vertx.createHttpServer() }
     private val router by lazy { Router.router(vertx) }
@@ -52,21 +52,25 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
             }
             .await()
         continuousTraffic()
+        if (daprActive) daprClient.waitForSidecar(10000).awaitFirst()
         super.start()
     }
 
-    private fun continuousTraffic() {
+    private fun CoroutineScope.continuousTraffic() {
         vertx.setPeriodic(config.getLong("interval", 1000)) {
             if (daprActive) {
-                daprClient.invokeMethod(
-                    invokeService,
-                    "hello",
-                    HttpExtension.GET,
-                    mapOf()
-                ).subscribe(
-                    { logger.debug { "invoked" } },
-                    { logger.error { "Failed to invoke! msg: ${it.message}" } },
-                )
+                launch {
+                    runCatching {
+                        daprClient
+                            .invokeMethod(invokeService, "hello", HttpExtension.GET, mapOf())
+                            .awaitFirst()
+                    }.onFailure { logger.error { "Failed to invoke! msg: ${it.message}" } }
+                }
+//                daprClient.invokeMethod(invokeService, "hello", HttpExtension.GET, mapOf())
+//                    .subscribe(
+//                    { logger.debug { "invoked" } },
+//                    { logger.error { "Failed to invoke! msg: ${it.message}" } },
+//                )
             } else {
                 client.get(backendPort, backend, "/hello")
                     .handleFailure()
@@ -76,7 +80,10 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
     }
 
     private fun HttpRequest<Buffer>.handleFailure() = if (addFailure) {
-        addQueryParam("failure", "true")
+        addQueryParam(
+            "failure",
+            "true"
+        )
     } else this
 
     private fun setupServer(router: Router): Future<HttpServer> {
@@ -122,7 +129,7 @@ class HttpServiceClient : CoroutineVerticle(), Logging {
                         .send()
                         .onFailure { logger.error { "The request was not successful.." } }
                         .onSuccess {
-                            if (Random.nextInt(0, 50) == 1 && it.statusCode() <=399) {
+                            if (Random.nextInt(0, 50) == 1 && it.statusCode() <= 399) {
                                 logger.info { "Message: ${it.body()}" }
                             } else {
                                 logger.error { "The request was not successful.. status code: ${it.statusCode()}" }

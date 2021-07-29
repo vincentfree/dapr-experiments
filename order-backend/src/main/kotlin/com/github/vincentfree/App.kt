@@ -1,5 +1,6 @@
 package com.github.vincentfree
 
+import com.github.vincentfree.verticle.DataBaseVerticle
 import com.github.vincentfree.verticle.HttpService
 import io.vertx.config.ConfigRetriever
 import io.vertx.core.Vertx
@@ -10,5 +11,6 @@ fun main() {
     val retriever = ConfigRetriever.create(vertx)
     retriever.config.onSuccess { config ->
         vertx.deployVerticle(HttpService(), deploymentOptionsOf(config = config))
+        vertx.deployVerticle(DataBaseVerticle(), deploymentOptionsOf(config = config))
     }
 }

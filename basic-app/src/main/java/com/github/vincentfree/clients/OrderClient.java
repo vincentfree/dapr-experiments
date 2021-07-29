@@ -49,9 +49,7 @@ public class OrderClient {
         var payload = wrapPayload(order.toJsonString());
         return HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(payload))
-                .uri(URI.create(
-                        "http://localhost:3500/v1.0/publish/myKafka/myTopic?metadata.partitionKey=" + order.getId()
-                ))
+                .uri(URI.create("http://localhost:3500/v1.0/publish/kafka/order.events"))
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
     }
@@ -66,9 +64,9 @@ public class OrderClient {
                 try {
                     System.out.println("Sending event to kafka..");
                     var result = sendEvent(generateOrderRequest());
-                    System.out.printf("The status is: %d and the result is : %s%n", result.statusCode(), result.body());
+                    System.out.printf("The status is: %d%n", result.statusCode());
                 } catch (IOException | InterruptedException err) {
-                    System.out.println("Failed to send event to kafka!");
+                    System.err.println("Failed to send event to kafka!");
                     throw new RuntimeException(err);
                 }
             }

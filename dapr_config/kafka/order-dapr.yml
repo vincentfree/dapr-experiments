@@ -2,14 +2,14 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: kafka
-  namespace: kafka
+  namespace: dapr
 spec:
   type: pubsub.kafka
   version: v1
   metadata:
       # Kafka broker connection setting
     - name: brokers
-      value: "dapr-kafka.svc.cluster.local:9092"
+      value: "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
     - name: authRequired
       value: "false"
     # - name: saslUsername
