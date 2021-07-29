@@ -9,6 +9,21 @@ data class Order(val id: String, val name: String, val orderId: String) {
         "name" to name,
         "orderId" to orderId,
     )
+
     fun toJsonString(): String = toJson().encode()
+
+    companion object {
+        fun ofJson(json: JsonObject): Result<Order> {
+            return with(json) {
+                runCatching {
+                    Order(
+                        id = getString("id"),
+                        name = getString("name"),
+                        orderId = getString("orderId"),
+                    )
+                }
+            }
+        }
+    }
 }
 
