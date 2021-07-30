@@ -4,7 +4,7 @@ metadata:
   name: basic-app
   labels:
     app: basic-app
-    version: v1.9
+    version: v1.10
 spec:
   replicas: 1
   template:
@@ -13,8 +13,8 @@ spec:
       labels:
         app: basic-app
         app.kubernetes.io/name: basic-app
-        app.kubernetes.io/version: v1.9
-        version: v1.9
+        app.kubernetes.io/version: v1.10
+        version: v1.10
       annotations:
         dapr.io/enabled: "true"
         dapr.io/app-id: "basic-app"
@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: basic-app
-          image: vincentfree/basic-app:v1.9
+          image: vincentfree/basic-app:v1.10
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -48,7 +48,7 @@ metadata:
   name: basic-app
   labels:
     app.kubernetes.io/name: basic-app
-    app.kubernetes.io/version: v1.9
+    app.kubernetes.io/version: v1.10
 spec:
   selector:
     app: basic-app

@@ -13,10 +13,8 @@ import io.dapr.client.DaprClientBuilder
 import io.vertx.core.Future
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.Message
-import io.vertx.core.eventbus.MessageProducer
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpServerResponse
-import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.core.json.jackson.DatabindCodec
@@ -25,15 +23,15 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.TimeoutHandler
 import io.vertx.kotlin.core.http.httpServerOptionsOf
+import io.vertx.kotlin.core.json.array
+import io.vertx.kotlin.core.json.json
 import io.vertx.kotlin.core.json.jsonObjectOf
+import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitFirst
 import org.apache.logging.log4j.kotlin.Logging
 import reactor.core.publisher.Mono
 import java.util.*
@@ -91,17 +89,6 @@ class HttpService : CoroutineVerticle(), Logging {
             post("/orders/events")
                 .handler(TimeoutHandler.create(5000))
                 .handler(::eventStream)
-            get("/dapr/subscribe")
-                .handler(TimeoutHandler.create(5000))
-                .handler {
-                    it.response().end(
-                        jsonObjectOf(
-                            "pubsubname" to "pubsub",
-                            "topic" to "order.events",
-                            "route" to "/orders/events",
-                        ).encode()
-                    )
-                }
             get("/hello")
                 .handler(TimeoutHandler.create(5000))
                 .handler {
@@ -160,24 +147,40 @@ class HttpService : CoroutineVerticle(), Logging {
     }
 
     private fun eventStream(ctx: RoutingContext) {
-        val futureEvent = VertxMessageFactory.createReader(ctx.request())
-            .map(MessageReader::toEvent)
-        futureEvent.onSuccess { event ->
-            logger.info {
-                """
-                Content-type: ${event.dataContentType}"
-                Event: ${event.data}"
-                """.trimIndent()
-            }
-            val order = CloudEventUtils
-                .mapData(event, PojoCloudEventDataMapper.from(DatabindCodec.mapper(), Order::class.java))
-                .value
-            bus.publish(SEND_ORDER, order.toJson())
-        }
+//        val futureEvent = VertxMessageFactory.createReader(ctx.request())
+//            .map(MessageReader::toEvent)
+//        futureEvent.onSuccess { event ->
+//            logger.info {
+//                """
+//                Content-type: ${event.dataContentType}"
+//                Event: ${event.data}"
+//                """.trimIndent()
+//            }
+//            val order = CloudEventUtils
+//                .mapData(event, PojoCloudEventDataMapper.from(DatabindCodec.mapper(), Order::class.java))
+//                .value
+//            bus.publish(SEND_ORDER, order.toJson())
+//        }
+
 //        val json = ctx.request().body().map(Buffer::toJsonObject)
-//        json.onSuccess { bus.publish(SEND_ORDER, it) }
-//            .onFailure { logger.error(it) { "Unable to parse to JsonObject" } }
-//        ctx.response().end()
+        val json = kotlin.runCatching { ctx.bodyAsJson }.getOrElse { JsonObject() }
+        runCatching {
+            val order = json.getString("data")
+            val orderJson = JsonObject(
+                order.replace("""\\""", """\""")
+                    .replace(
+                        """
+                        \"
+                        """.trimIndent(),
+                        """
+                        "
+                        """.trimIndent()
+                    )
+            )
+            bus.publish(SEND_ORDER, orderJson)
+        }
+            .onSuccess { ctx.response().end() }
+            .onFailure(ctx::fail)
     }
 
     private fun getOrderVertx(ctx: RoutingContext) {

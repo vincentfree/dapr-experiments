@@ -4,7 +4,7 @@ metadata:
   name: order-subscription
 spec:
   topic: order.events
-  route: /orderevents
-  pubsubname: pubsub
-#scopes:
-#  - order-backend
+  route: /orders/events
+  pubsubname: kafka
+scopes:
+  - order-backend

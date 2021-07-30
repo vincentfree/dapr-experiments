@@ -10,12 +10,8 @@ public class OrderClientTest {
     @Test
     void wrapJson() {
         var order = new Order("id", "name", "orderId");
-        var client = new OrderClient(HttpClient.newHttpClient());
-        String result = client.wrapPayload(order.toJsonString());
+        String result = order.toJsonString();
         System.out.println(result);
-        Assertions.assertEquals(
-                "{ \"data\": {{\"id\":\"id\",\"name\":\"name\",\"orderId\":\"orderId\"}} }",
-                result
-        );
+        Assertions.assertEquals("{\"id\":\"id\",\"name\":\"name\",\"orderId\":\"orderId\"}", result);
     }
 }

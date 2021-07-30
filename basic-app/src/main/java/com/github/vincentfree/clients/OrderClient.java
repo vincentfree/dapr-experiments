@@ -46,9 +46,8 @@ public class OrderClient {
     private HttpRequest generateOrderRequest() {
         var word = words[ThreadLocalRandom.current().nextInt(words.length)];
         var order = new Order(word, word, UUID.randomUUID().toString());
-        var payload = wrapPayload(order.toJsonString());
         return HttpRequest.newBuilder()
-                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                .POST(HttpRequest.BodyPublishers.ofString(order.toJsonString()))
                 .uri(URI.create("http://localhost:3500/v1.0/publish/kafka/order.events"))
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
@@ -74,6 +73,6 @@ public class OrderClient {
     }
 
     protected String wrapPayload(String payload) {
-        return "{ \"data\": {" + payload + "} }";
+        return "{ \"data\":" + payload + "}";
     }
 }
