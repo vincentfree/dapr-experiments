@@ -71,8 +71,4 @@ public class OrderClient {
             }
         };
     }
-
-    protected String wrapPayload(String payload) {
-        return "{ \"data\":" + payload + "}";
-    }
 }

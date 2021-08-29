@@ -10,9 +10,6 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = 11
-targetCompatibility = 11
-
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
@@ -31,6 +28,10 @@ jar {
     manifest {
         attributes 'Main-Class': 'com.github.vincentfree.App'
     }
+}
+
+tasks.named('compileJava') {
+    options.javaModuleVersion = provider { project.version }
 }
 
 task wrapper(type: Wrapper) {

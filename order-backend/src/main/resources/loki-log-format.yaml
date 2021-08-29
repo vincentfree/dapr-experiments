@@ -1,0 +1,30 @@
+- json:
+    expressions:
+      output: message
+      level: level
+      stream: stream
+      timestamp: time
+      thread: thread
+      logger: loggerName
+      threadId: threadId
+
+
+
+
+
+
+{                                                                                                                                                                                                                                                                                                                                                                                                                     
+   "instant" : {                                                                                                                                                                                                                                                                                                                                                                                                       
+     "epochSecond" : 1623744642,                                                                                                                                                                                                                                                                                                                                                                                       
+     "nanoOfSecond" : 689000000                                                                                                                                                                                                                                                                                                                                                                                        
+   },                                                                                                                                                                                                                                                                                                                                                                                                                  
+   "thread" : "vert.x-eventloop-thread-1",                                                                                                                                                                                                                                                                                                                                                                             
+   "level" : "INFO",                                                                                                                                                                                                                                                                                                                                                                                                   
+   "loggerName" : "com.github.vincentfree.verticle.HttpService",                                                                                                                                                                                                                                                                                                                                                       
+   "message" : "Dapr active: false",                                                                                                                                                                                                                                                                                                                                                                                   
+   "endOfBatch" : false,                                                                                                                                                                                                                                                                                                                                                                                               
+   "loggerFqcn" : "org.apache.logging.log4j.kotlin.KotlinLogger",                                                                                                                                                                                                                                                                                                                                                      
+   "threadId" : 16,                                                                                                                                                                                                                                                                                                                                                                                                    
+   "threadPriority" : 5,                                                                                                                                                                                                                                                                                                                                                                                               
+   "Hostname" : "order-backend-7f76fcbbcc-7xdrl"                                                                                                                                                                                                                                                                                                                                                                       
+ }

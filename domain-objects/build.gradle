@@ -21,8 +21,8 @@ compileKotlin {
 def vertxVersion = '4.1.2'
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.21'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 
@@ -32,6 +32,10 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+tasks.named('compileJava') {
+    options.javaModuleVersion = provider { project.version }
 }
 
 task wrapper(type: Wrapper) {

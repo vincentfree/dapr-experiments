@@ -11,7 +11,7 @@ Dapr currently supports the Zipkin protocol. Since Jaeger is
 compatible with Zipkin, the Zipkin protocol can be used to talk to
 Jaeger.
 
-## Configure self hosted mode
+## Configure self-hosted mode
 
 ### Setup
 
@@ -54,7 +54,7 @@ dapr run --app-id mynode --app-port 3000 node app.js --config config.yaml
 ```
 
 ### Viewing Traces
-To view traces, in your browser go to http://localhost:16686 and you will see the Jaeger UI.
+To view traces, in your browser go to http://localhost:16686, and you will see the Jaeger UI.
 
 ## Configure Kubernetes
 The following steps shows you how to configure Dapr to send distributed tracing data to Jaeger running as a container in your Kubernetes cluster, how to view them.
@@ -107,7 +107,7 @@ spec:
       endpointAddress: "http://jaeger-collector.default.svc.cluster.local:9411/api/v2/spans"
 ```
 
-Finally, deploy the the Dapr component and configuration files:
+Finally, deploy the Dapr component and configuration files:
 
 ```bash
 kubectl apply -f tracing.yaml

@@ -1,37 +1,28 @@
 package com.github.vincentfree.verticle
 
-import com.github.vincentfree.model.Addresses
+import com.github.vincentfree.model.*
 import com.github.vincentfree.model.Addresses.GET_ORDER
 import com.github.vincentfree.model.Addresses.SEND_ORDER
-import com.github.vincentfree.model.Order
-import com.github.vincentfree.model.ResponseHeaders
-import io.cloudevents.core.CloudEventUtils
-import io.cloudevents.core.message.MessageReader
-import io.cloudevents.http.vertx.VertxMessageFactory
-import io.cloudevents.jackson.PojoCloudEventDataMapper
 import io.dapr.client.DaprClientBuilder
 import io.vertx.core.Future
-import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.Message
 import io.vertx.core.http.HttpHeaders
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
-import io.vertx.core.json.jackson.DatabindCodec
+import io.vertx.core.shareddata.Shareable
+import io.vertx.ext.auth.VertxContextPRNG
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.TimeoutHandler
 import io.vertx.kotlin.core.http.httpServerOptionsOf
-import io.vertx.kotlin.core.json.array
-import io.vertx.kotlin.core.json.json
-import io.vertx.kotlin.core.json.jsonObjectOf
-import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.await
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitFirst
 import org.apache.logging.log4j.kotlin.Logging
 import reactor.core.publisher.Mono
 import java.util.*
@@ -60,7 +51,7 @@ class HttpService : CoroutineVerticle(), Logging {
         logger.info { "server started on port: ${server.actualPort()}" }
         if (daprActive) {
             kotlin.runCatching {
-                daprClient.waitForSidecar(5000).asVertxFlow().first()
+                daprClient.waitForSidecar(5000).awaitFirst()
             }.onFailure {
                 logger.error { "Failed to connect to dapr, starting without verification " }
                 logger.info { "Application started" }
@@ -86,6 +77,9 @@ class HttpService : CoroutineVerticle(), Logging {
             get("/orders").produces(ResponseHeaders.json)
                 .handler(TimeoutHandler.create(5000))
                 .handler(::orders)
+            put("/orders/:key/:name")
+                .handler(TimeoutHandler.create(5000))
+                .handler(::createOrder)
             post("/orders/events")
                 .handler(TimeoutHandler.create(5000))
                 .handler(::eventStream)
@@ -105,9 +99,6 @@ class HttpService : CoroutineVerticle(), Logging {
                         it.response().end("Hello world!")
                     }
                 }
-            put("/orders/:key/:name")
-                .handler(TimeoutHandler.create(5000))
-                .handler(::createOrder)
             put("/error/scale/:value")
                 .handler(TimeoutHandler.create(5000))
                 .handler(::updateScale)
@@ -147,36 +138,18 @@ class HttpService : CoroutineVerticle(), Logging {
     }
 
     private fun eventStream(ctx: RoutingContext) {
-//        val futureEvent = VertxMessageFactory.createReader(ctx.request())
-//            .map(MessageReader::toEvent)
-//        futureEvent.onSuccess { event ->
-//            logger.info {
-//                """
-//                Content-type: ${event.dataContentType}"
-//                Event: ${event.data}"
-//                """.trimIndent()
-//            }
-//            val order = CloudEventUtils
-//                .mapData(event, PojoCloudEventDataMapper.from(DatabindCodec.mapper(), Order::class.java))
-//                .value
-//            bus.publish(SEND_ORDER, order.toJson())
-//        }
-
-//        val json = ctx.request().body().map(Buffer::toJsonObject)
         val json = kotlin.runCatching { ctx.bodyAsJson }.getOrElse { JsonObject() }
         runCatching {
             val order = json.getString("data")
-            val orderJson = JsonObject(
-                order.replace("""\\""", """\""")
-                    .replace(
-                        """
-                        \"
-                        """.trimIndent(),
-                        """
-                        "
-                        """.trimIndent()
-                    )
-            )
+            val orderJson = kotlin.runCatching {
+                JsonObject(order.cleanupJson()).also {
+                    if (VertxContextPRNG.current().nextInt(100) == 0) logger.info { "In catching" }
+                }
+            }.recover {
+                JsonObject(order.cleanupJson()).also {
+                    if (VertxContextPRNG.current().nextInt(100) == 0) logger.info { "Recovered" }
+                }
+            }.getOrThrow()
             bus.publish(SEND_ORDER, orderJson)
         }
             .onSuccess { ctx.response().end() }
@@ -203,21 +176,8 @@ class HttpService : CoroutineVerticle(), Logging {
         ctx.pathParam("key")?.let { key ->
             logger.debug { "Getting data for key: $key" }
             bus.request<JsonObject>(GET_ORDER, key).onSuccess { msg ->
-                val json = msg.body()
-                when (msg.headers()["status"]) {
-                    "success" -> ctx.response().apply {
-                        putHeader(HttpHeaders.CONTENT_TYPE, ResponseHeaders.json)
-                        end(json.encode())
-                    }
-                    "empty" -> ctx.response().apply {
-                        statusCode = 204
-                        end()
-                    }
-                    else -> ctx.response().apply {
-                        statusCode = 500
-                        end()
-                    }
-                }
+                val handleResponse: HttpServerResponse.() -> Unit = handleStatusHeader(msg)
+                ctx.response().handleResponse()
             }.onFailure(ctx::fail)
         } ?: ctx.response().badRequest("The key path param could not be resolved")
     }
@@ -257,4 +217,51 @@ class HttpService : CoroutineVerticle(), Logging {
 
     private fun <T> Mono<out T>.asVertxFlow(): Flow<T> = this.asFlow()
         .flowOn(vertx.dispatcher())
+
+    private fun String.cleanupJson(): String {
+        return replace("""\\""", """\""")
+            .replace(
+                """
+                \"
+                """.trimIndent(),
+                """
+                "
+                """.trimIndent()
+            ).replace(
+                """
+                ""
+                """.trimIndent(),
+                """
+                "
+                """.trimIndent()
+            )
+    }
+
+    private fun handleStatusHeader(msg: Message<JsonObject>): HttpServerResponse.() -> Unit =
+        when (EventStatus.ofStatus(msg)) {
+            is EventStatus.Successful -> {
+                {
+                    apply {
+                        putHeader(HttpHeaders.CONTENT_TYPE, ResponseHeaders.json)
+                        end(msg.body().encode())
+                    }
+                }
+            }
+            is EventStatus.Empty -> {
+                {
+                    apply {
+                        statusCode = 204
+                        end()
+                    }
+                }
+            }
+            is EventStatus.Failure -> {
+                {
+                    apply {
+                        statusCode = 500
+                        end()
+                    }
+                }
+            }
+        }
 }

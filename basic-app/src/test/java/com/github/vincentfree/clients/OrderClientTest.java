@@ -4,8 +4,6 @@ import com.github.vincentfree.model.Order;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.net.http.HttpClient;
-
 public class OrderClientTest {
     @Test
     void wrapJson() {

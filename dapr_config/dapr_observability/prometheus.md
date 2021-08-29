@@ -41,7 +41,7 @@ Run Prometheus with your configuration to start it collecting metrics from the s
 ```bash
 ./prometheus --config.file=/tmp/prometheus.yml --web.listen-address=:8080
 ```
-> We change the port so it doesn't conflict with Dapr's own metrics endpoint.
+> We change the port, so it doesn't conflict with Dapr's own metrics endpoint.
 
 If you are not currently running a Dapr application, the target will show as offline. In order to start
 collecting metrics you must start Dapr with the metrics port matching the one provided as the target in the configuration.

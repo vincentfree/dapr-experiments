@@ -3,7 +3,7 @@ type: docs
 title: "How-To: Set up Fluentd, Elastic search and Kibana in Kubernetes"
 linkTitle: "FluentD"
 weight: 1000
-description: "How to install Fluentd, Elastic Search, and Kibana to search logs in Kubernetes"
+description: "How to install Fluentd, Elasticsearch, and Kibana to search logs in Kubernetes"
 ---
 
 ## Prerequisites
@@ -15,7 +15,7 @@ description: "How to install Fluentd, Elastic Search, and Kibana to search logs 
 
 ## Install Elastic search and Kibana
 
-1.  Create namespace for monitoring tool and add Helm repo for Elastic Search
+1.  Create namespace for monitoring tool and add Helm repo for Elasticsearch
 
     ```bash
     kubectl create namespace dapr-monitoring
@@ -28,9 +28,9 @@ description: "How to install Fluentd, Elastic Search, and Kibana to search logs 
     helm repo update
     ```
 
-3. Install Elastic Search using Helm
+3. Install Elasticsearch using Helm
 
-By default the chart creates 3 replicas which must be on different nodes.  If your cluster has less than 3 nodes, specify a lower number of replicas.  For example, this sets it to 1:
+By default, the chart creates 3 replicas which must be on different nodes.  If your cluster has less than 3 nodes, specify a lower number of replicas.  For example, this sets it to 1:
 
 ```bash
 helm install elasticsearch elastic/elasticsearch -n dapr-monitoring --set replicas=1
@@ -56,7 +56,7 @@ helm install elasticsearch elastic/elasticsearch -n dapr-monitoring --set persis
 
 5. Validation
 
-   Ensure Elastic Search and Kibana are running in your Kubernetes cluster.
+   Ensure Elasticsearch and Kibana are running in your Kubernetes cluster.
 
     ```bash
     kubectl get pods -n dapr-monitoring
@@ -135,7 +135,7 @@ spec:
 
 ## Search logs
 
-> Note: Elastic Search takes a time to index the logs that Fluentd sends.
+> Note: Elasticsearch takes a time to index the logs that Fluentd sends.
 
 1. Port-forward to svc/kibana-kibana
 
@@ -169,7 +169,7 @@ Handling connection for 5601
 
 ![timestamp](/images/kibana-5.png)
 
-8. Confirm that `scope`, `type`, `app_id`, `level`, etc are being indexed.
+8. Confirm that `scope`, `type`, `app_id`, `level`, etc. are being indexed.
 
 > Note: if you cannot find the indexed field, please wait. it depends on the volume of data and resource size where elastic search is running.
 
