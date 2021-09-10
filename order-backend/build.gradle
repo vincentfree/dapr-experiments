@@ -31,7 +31,7 @@ compileKotlin {
 }
 
 def vertxVersion = '4.1.2'
-def daprVersion = '1.1.0'
+def daprVersion = '1.2.0'
 
 dependencies {
     implementation project(':domain-objects')

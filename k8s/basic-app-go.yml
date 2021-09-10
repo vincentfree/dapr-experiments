@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: basic-app-go
+  labels:
+    app: basic-app-go
+    version: v0.1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: basic-app-go
+      labels:
+        app: basic-app-go
+        app.kubernetes.io/name: basic-app-go
+        app.kubernetes.io/version: v0.1
+        version: v0.1
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "basic-app-go"
+        # dapr.io/app-port: "8080"
+        dapr.io/config: "tracing"
+    spec:
+      containers:
+        - name: basic-app-go
+          image: vincentfree/basic-app-go:v0.1
+          imagePullPolicy: IfNotPresent
+          # ports:
+          #   - containerPort: 8080
+          env:
+            - name: DAPR_ACTIVE
+              value: "true"
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: 100m
+            limits:
+              memory: 800Mi
+              cpu: 1000m
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: basic-app-go
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: basic-app-go
+#   labels:
+#     app.kubernetes.io/name: basic-app-go
+#     app.kubernetes.io/version: v0.1
+# spec:
+#   selector:
+#     app: basic-app-go
+#   ports:
+#     - port: 8080
+#       protocol: TCP
+#   type: ClusterIP

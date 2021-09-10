@@ -1,0 +1,53 @@
+openapi: 3.0.3
+info:
+  title: Product Service
+  description: Product Service
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: 'http://localhost:8080'
+
+paths:
+  /product/{id}:
+    get:
+      summary: Get a product based on it's ID
+      operationId: ProductByID
+      tags: [ ID ]
+      responses:
+        200:
+          description: Found the Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        404:
+          description: Product could not be found based on it's ID
+          content:
+            text/plain:
+              example: 'Product not found'
+        500:
+          description: Internal server error
+
+
+components:
+  schemas:
+    product:
+      type: object
+      example: '{"product_id": "15", "name": "apple", "quantity": 5 }'
+      required:
+        - product_id
+        - name
+        - quantity
+      properties:
+        product_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
+          nullable: false
+

@@ -19,6 +19,7 @@ public class HelloClient {
         return HttpRequest.newBuilder()
                 .GET()
                 .version(HttpClient.Version.HTTP_1_1)
+                .header("Content-Type", "application/json")
                 .uri(URI.create("http://localhost:3500/v1.0/invoke/order-backend/method/hello?failure=true"))
                 .timeout(Duration.ofSeconds(5)).build();
     }
