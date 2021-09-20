@@ -6,6 +6,7 @@ require github.com/dapr/go-sdk v1.2.0
 
 require (
 	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
 	golang.org/x/sys v0.0.0-20201202213521-69691e467435 // indirect

@@ -1,7 +1,7 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: kafka
+  name: pubsub
   namespace: dapr
 spec:
   type: pubsub.kafka

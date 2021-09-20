@@ -6,16 +6,20 @@ import (
 	"time"
 
 	"com.github.vincentfree/basic-app/hello"
+	"com.github.vincentfree/basic-app/order"
+	"github.com/dapr/go-sdk/client"
 )
 
 func main() {
 	fmt.Println("Starting application...")
-	// daprClient, err := client.NewClient()
-	// if err != nil {
-	// 	log.Fatalln("unable to create a dapr client")
-	// }
+	daprClient, err := client.NewClient()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	d := order.DaprClient{Dapr: daprClient}
 	client := hello.Client{HttpClient: http.DefaultClient}
-	// client := hello.Client{HttpClient: http.DefaultClient, DaprClient: &daprClient}
-	client.HelloTimerTask(3 * time.Second)
+	go d.OrderTimerTask(3 * time.Second)
+	go client.HelloTimerTask(3 * time.Second)
 	select {}
 }

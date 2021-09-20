@@ -26,8 +26,6 @@ type Client struct {
 }
 
 func (c *Client) helloRequest(result chan []byte) error {
-	// c.HttpClient.Timeout = time.Duration(2500 * time.Millisecond)
-	// var resp, err = c.HttpClient.Get(helloUrl)
 	ctx := context.Background()
 	
 	daprClient, err := client.NewClient()
