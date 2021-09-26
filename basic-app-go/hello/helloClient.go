@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	// helloUrl = "http://127.0.0.1:3500/v1.0/invoke/order-backend/method/hello" //?failure=true
+// helloUrl = "http://127.0.0.1:3500/v1.0/invoke/order-backend/method/hello" //?failure=true
 )
 
-var(
-	buffer chan[]byte = make(chan []byte, 2)
-	logger = log.Default()
+var (
+	buffer      chan []byte = make(chan []byte, 2)
+	logger                  = log.Default()
 	localClient Client
 )
 
@@ -27,7 +27,7 @@ type Client struct {
 
 func (c *Client) helloRequest(result chan []byte) error {
 	ctx := context.Background()
-	
+
 	daprClient, err := client.NewClient()
 	if err != nil {
 		log.Fatalln("unable to create a dapr client")
@@ -64,7 +64,7 @@ func (c *Client) HelloTimerTask(d time.Duration) {
 		case <-tick.C:
 			go c.helloRequest(buffer)
 		case resp := <-buffer:
-			logger.Printf("The message: %s\n",string(resp))
+			logger.Printf("The message: %s\n", string(resp))
 		}
 	}
 }

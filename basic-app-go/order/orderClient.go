@@ -63,7 +63,7 @@ func (d *DaprClient) request() {
 	if err != nil {
 		fmt.Printf("Failed to send order event: %s to kafka\n", string(b))
 	}
-	msgChannel <-fmt.Sprintf("the order message: %s, has been send", o.ToJsonString())
+	msgChannel <- fmt.Sprintf("the order message: %s, has been send", o.ToJsonString())
 }
 
 func (c *DaprClient) OrderTimerTask(d time.Duration) {
