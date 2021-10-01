@@ -18,7 +18,7 @@ func main() {
 	}
 
 	d := order.DaprClient{Dapr: daprClient}
-	helloClient := hello.Client{HttpClient: http.DefaultClient}
+	helloClient := hello.Client{HttpClient: http.DefaultClient, DaprClient: &daprClient}
 	go d.OrderTimerTask(3 * time.Second)
 	go helloClient.HelloTimerTask(3 * time.Second)
 	select {}

@@ -1,0 +1,8 @@
+syntax = "proto3";
+package workshop;
+option go_package = "github.com/vincentfree/dapr-experiments/pkg/proto/v1;workshop";
+message Product {
+  string productId = 1;
+  string name = 2;
+  int32 quantity = 3;
+}

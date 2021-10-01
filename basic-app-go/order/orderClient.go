@@ -33,15 +33,15 @@ type DaprClient struct {
 type Order struct {
 	Id      string `json:"id"`
 	Name    string `json:"name"`
-	OrderId string `json:"order_id"`
+	OrderId string `json:"orderId"`
 }
 
 func (o *Order) toJson() ([]byte, error) {
-	json, err := json.Marshal(o)
+	jsonBody, err := json.Marshal(o)
 	if err != nil {
 		return nil, err
 	}
-	return json, nil
+	return jsonBody, nil
 
 }
 
@@ -53,13 +53,13 @@ func (o *Order) ToJsonString() string {
 	return string(order)
 }
 
-func (d *DaprClient) request() {
+func (c *DaprClient) request() {
 	ctx := context.Background()
 	word := words[rand.Intn(len(words))]
-	uuid, _ := uuid.NewRandom()
-	o := Order{Id: word, Name: word, OrderId: uuid.String()}
+	randomUUID, _ := uuid.NewRandom()
+	o := Order{Id: word, Name: word, OrderId: randomUUID.String()}
 	b, _ := o.toJson()
-	err := d.Dapr.PublishEvent(ctx, "pubsub", "order.events", b)
+	err := c.Dapr.PublishEvent(ctx, "pubsub", "order.events", b)
 	if err != nil {
 		fmt.Printf("Failed to send order event: %s to kafka\n", string(b))
 	}

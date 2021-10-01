@@ -11,13 +11,14 @@ import (
 )
 
 const (
-// helloUrl = "http://127.0.0.1:3500/v1.0/invoke/order-backend/method/hello" //?failure=true
+	// helloUrl = "http://127.0.0.1:3500/v1.0/invoke/order-backend/method/hello" //?failure=true
+	orderBackend = "order-backend"
+	helloMethod  = "hello"
 )
 
 var (
-	buffer      chan []byte = make(chan []byte, 2)
-	logger                  = log.Default()
-	localClient Client
+	buffer = make(chan []byte, 2)
+	logger = log.Default()
 )
 
 type Client struct {
@@ -26,45 +27,49 @@ type Client struct {
 }
 
 func (c *Client) helloRequest(result chan []byte) error {
-	ctx := context.Background()
-
-	daprClient, err := client.NewClient()
-	if err != nil {
-		log.Fatalln("unable to create a dapr client")
-	}
-
-	client := *localClient.DaprClient
-	resp, err := daprClient.InvokeMethod(ctx, "order-backend", "hello", "get")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(3)*time.Second)
+	daprClient := *c.DaprClient
+	resp, err := daprClient.InvokeMethod(ctx, orderBackend, helloMethod, "get")
 	if err != nil {
 		log.Println(err.Error())
-		fmt.Println("Closing application...")
+		fmt.Println("Closing request...")
 		close(result)
-		client.Close()
+		cancel()
 		return err
 	}
 	result <- resp
+	cancel()
 	return nil
 }
 
-func setupLocalClient(c *Client) {
-	localClient.HttpClient = c.HttpClient
-	daprClient, err := client.NewClient()
-	if err != nil {
-		log.Fatalln("unable to create a dapr client")
-	}
-	localClient.DaprClient = &daprClient
-}
-
 func (c *Client) HelloTimerTask(d time.Duration) {
-	setupLocalClient(c)
 
 	tick := time.NewTicker(d)
 	for {
 		select {
 		case <-tick.C:
-			go c.helloRequest(buffer)
+			go func() {
+				err := c.helloRequest(buffer)
+				if err != nil {
+					defer handleRequestPanic()
+					fmt.Println("Closing application...")
+					//c.closeClient()
+					logger.Panicln("Fatal error in helloRequest |", err.Error())
+				}
+			}()
 		case resp := <-buffer:
 			logger.Printf("The message: %s\n", string(resp))
 		}
+	}
+}
+
+func (c *Client) closeClient() {
+	dapr := *c.DaprClient
+	dapr.Close()
+}
+
+func handleRequestPanic() {
+	if r := recover(); r != nil {
+		fmt.Println("Recovering from panic:", r)
 	}
 }

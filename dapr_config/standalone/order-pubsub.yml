@@ -10,4 +10,8 @@ spec:
   - name: redisHost
     value: localhost:6379
   - name: redisPassword
-    value: "KeFg23!"
+      secretKeyRef:
+        name: redis
+        key: redis-password
+#  - name: redisPassword
+#    value: "KeFg23!"
