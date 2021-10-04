@@ -1,0 +1,1 @@
+protoc -I $(pwd)/model/ --kotlin_out $(pwd)/../domain-objects/src/main/kotlin $(pwd)/model/workshop.proto

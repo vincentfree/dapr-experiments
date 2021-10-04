@@ -1,0 +1,18 @@
+syntax = "proto3";
+package workshop;
+option go_package = "pkg/workshop";
+option java_multiple_files = true;
+option java_package = "com.github.vincentfree.model.proto";
+//option java_outer_classname = "WorkshopProtos";
+
+message Order {
+    string id = 1;
+    string name = 2;
+    string order_id = 3;
+}
+
+message Product {
+    string productId = 1;
+    string name = 2;
+    int32 quantity = 3;
+}

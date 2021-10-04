@@ -77,3 +77,4 @@ func (c *DaprClient) OrderTimerTask(d time.Duration) {
 		}
 	}
 }
+// protoc -I /mnt/c/Users/vince/IdeaProjects/dapr-experiments/workshop/model/ --go_out /mnt/c/Users/vince/IdeaProjects/dapr-experiments/basic-app-go/pkg/ /mnt/c/Users/vince/IdeaProjects/dapr-experiments/workshop/model/order.proto

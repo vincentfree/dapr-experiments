@@ -53,7 +53,6 @@ func (c *Client) HelloTimerTask(d time.Duration) {
 				if err != nil {
 					defer handleRequestPanic()
 					fmt.Println("Closing application...")
-					//c.closeClient()
 					logger.Panicln("Fatal error in helloRequest |", err.Error())
 				}
 			}()
