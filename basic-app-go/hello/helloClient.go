@@ -3,11 +3,11 @@ package hello
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/dapr/go-sdk/client"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -18,7 +18,6 @@ const (
 
 var (
 	buffer = make(chan []byte, 2)
-	logger = log.Default()
 )
 
 type Client struct {
@@ -31,8 +30,8 @@ func (c *Client) helloRequest(result chan []byte) error {
 	daprClient := *c.DaprClient
 	resp, err := daprClient.InvokeMethod(ctx, orderBackend, helloMethod, "get")
 	if err != nil {
-		log.Println(err.Error())
-		fmt.Println("Closing request...")
+		log.Error().Err(err).Msg("Error in helloRequest")
+		log.Info().Msg("Closing request...")
 		close(result)
 		cancel()
 		return err
@@ -48,16 +47,16 @@ func (c *Client) HelloTimerTask(d time.Duration) {
 	for {
 		select {
 		case <-tick.C:
-			go func() {
-				err := c.helloRequest(buffer)
+			go func(b chan []byte) {
+				err := c.helloRequest(b)
 				if err != nil {
 					defer handleRequestPanic()
 					fmt.Println("Closing application...")
-					logger.Panicln("Fatal error in helloRequest |", err.Error())
+					log.Panic().Err(err).Msg("Fatal error in helloRequest")
 				}
-			}()
+			}(buffer)
 		case resp := <-buffer:
-			logger.Printf("The message: %s\n", string(resp))
+			log.Info().Str("message", string(resp)).Msg("message has been send")
 		}
 	}
 }

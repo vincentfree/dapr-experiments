@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
 	"github.com/dapr/go-sdk/client"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -23,7 +23,6 @@ var (
 		"maras",
 	}
 	msgChannel = make(chan string)
-	logger     = log.Default()
 )
 
 type DaprClient struct {
@@ -73,8 +72,9 @@ func (c *DaprClient) OrderTimerTask(d time.Duration) {
 		case <-tick.C:
 			go c.request()
 		case resp := <-msgChannel:
-			logger.Printf("The published message: %s\n", resp)
+			log.Info().Str("msg", resp).Msg("Message published")
 		}
 	}
 }
+
 // protoc -I /mnt/c/Users/vince/IdeaProjects/dapr-experiments/workshop/model/ --go_out /mnt/c/Users/vince/IdeaProjects/dapr-experiments/basic-app-go/pkg/ /mnt/c/Users/vince/IdeaProjects/dapr-experiments/workshop/model/order.proto
